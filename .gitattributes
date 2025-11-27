@@ -1,41 +1,49 @@
-
-CREATE TABLE Paises(
-    pais_id SERIAL PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL UNIQUE,
-    codigo_iso CHAR(3) NOT NULL UNIQUE,
-    latitud_media NUMERIC(9, 6),
-    longitud_media NUMERIC(9, 6)
-);
-
-
-CREATE TABLE FuentesEnergia(
-    fuente_id SERIAL PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL UNIQUE,
-    tipo VARCHAR(50) NOT NULL, 
-    factor_emision NUMERIC(10, 4), 
-);
-
-
-CREATE TABLE Emisiones(
-    registro_id SERIAL PRIMARY KEY,
-    pais_id INTEGER NOT NULL,
-    fuente_id INTEGER NOT NULL,
-    anio SMALLINT NOT NULL,
-    emisiones_co2 NUMERIC(20, 2) NOT NULL,
-    produccion_mwh NUMERIC(20, 2),
+public class PaisDAO{
+    private static final String INSERT="INSERT INTO Paises(nombre, codigo_iso, latitud_media, longitud_media) VALUES(,,,);
+    public int insert(Pais pais) throws SQLException{
+        int idGenerado=-1;
+        try(Connection conn=DatabaseConfig.getConnection();
+             PreparedStatement pstmt=conn.prepareStatement(INSERT, PreparedStatement.RETURN_GENERATED_KEYS)){
+            pstmt.setString(1, pais.getNombre());
+            pstmt.setString(2, pais.getCodigoIso());
+            pstmt.setObject(3, pais.getLatitudMedia()); 
+            pstmt.setObject(4, pais.getLongitudMedia());
+            pstmt.executeUpdate(); 
+            try(ResultSet rs= pstmt.getGeneratedKeys()){
+                if(rs.next()){
+                    idGenerado=rs.getInt(1);
+                    pais.setPaisId(idGenerado); 
+                }
+            }
+        }
+        return idGenerado;
+    }
     
-    UNIQUE(pais_id) fuente_id, anio), 
-    FOREIGN KEY(pais_id) REFERENCES Paises(pais_id),
-    FOREIGN KEY(fuente_id) REFERENCES FuentesEnergia(fuente_id)
-);
+}
 
-CREATE TABLE EventosClimaticos(
-    evento_id SERIAL PRIMARY KEY,
-    pais_id INTEGER NOT NULL,
-    tipo_evento VARCHAR(50) NOT NULL,
-    fecha_inicio DATE NOT NULL,
-    fecha_fin DATE,
-    costo_estimado_usd BIGINT,
-    descripcion TEXT,
-    FOREIGN KEY(pais_id) REFERENCES Paises(pais_id)
-);
+// MainApp.java se guarda en carpeta separada 
+public class MainApp{
+    public static void main(String[] args){
+        
+        PaisDAO paisDAO=new PaisDAO();
+        FuenteEnergiaDAO fuenteDAO=new FuenteEnergiaDAO();
+        
+        try{
+            
+            Pais nuevoPais=new Pais("Argentina","ARG", -34.0, -64.0);
+            int paisId=paisDAO.insert(nuevoPais); 
+            System.out.println("Argentina insertada con ID:"+paisId);
+
+            FuenteEnergia nuevaFuente=new FuenteEnergia("Eólica","Renovable", 0.0);
+            int fuenteId=fuenteDAO.insert(nuevaFuente); 
+            System.out.println("Fuente insertada con ID:"+fuenteId);
+            
+            
+            Emision nuevaEmision=new Emision(paisId, fuenteId,(short) 2025, 85000.0, 500000.0);
+            emisionDAO.insert(nuevaEmision);
+            
+        } catch(SQLException e){
+        
+        }
+    }
+}
