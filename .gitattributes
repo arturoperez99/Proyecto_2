@@ -1,5 +1,41 @@
-# Auto detect text files and perform LF normalization
-* text=auto
-Front:
-Body:
-Base:
+
+CREATE TABLE Paises(
+    pais_id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL UNIQUE,
+    codigo_iso CHAR(3) NOT NULL UNIQUE,
+    latitud_media NUMERIC(9, 6),
+    longitud_media NUMERIC(9, 6)
+);
+
+
+CREATE TABLE FuentesEnergia(
+    fuente_id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL UNIQUE,
+    tipo VARCHAR(50) NOT NULL, 
+    factor_emision NUMERIC(10, 4), 
+);
+
+
+CREATE TABLE Emisiones(
+    registro_id SERIAL PRIMARY KEY,
+    pais_id INTEGER NOT NULL,
+    fuente_id INTEGER NOT NULL,
+    anio SMALLINT NOT NULL,
+    emisiones_co2 NUMERIC(20, 2) NOT NULL,
+    produccion_mwh NUMERIC(20, 2),
+    
+    UNIQUE(pais_id) fuente_id, anio), 
+    FOREIGN KEY(pais_id) REFERENCES Paises(pais_id),
+    FOREIGN KEY(fuente_id) REFERENCES FuentesEnergia(fuente_id)
+);
+
+CREATE TABLE EventosClimaticos(
+    evento_id SERIAL PRIMARY KEY,
+    pais_id INTEGER NOT NULL,
+    tipo_evento VARCHAR(50) NOT NULL,
+    fecha_inicio DATE NOT NULL,
+    fecha_fin DATE,
+    costo_estimado_usd BIGINT,
+    descripcion TEXT,
+    FOREIGN KEY(pais_id) REFERENCES Paises(pais_id)
+);
